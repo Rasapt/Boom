@@ -14,7 +14,7 @@ Build an adaptive planning engine that maintains a student's academic state, gen
 
 ```text
 backend/    Core application and planning engine
-afrontend/  Frontend application
+frontend/   Frontend application
 data/       Structured academic/content data
 docs/       Product and technical specifications
 tests/      Automated tests
