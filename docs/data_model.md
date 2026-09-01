@@ -1,4 +1,4 @@
-# Moshaver — Initial Data Model
+# Boom — Initial Data Model
 
 This is the first conceptual data model. It is intentionally small and will evolve as the planner is implemented.
 
