@@ -1,8 +1,8 @@
-# Moshaver — System Specification
+# Boom — System Specification
 
 ## 1. Product objective
 
-Moshaver is intended to reduce the complexity and pressure of Konkoor preparation by maintaining a clear model of the student's past, present, and future work and using that state to produce a personalized study plan.
+Boom is intended to reduce the complexity and pressure of Konkoor preparation by maintaining a clear model of the student's past, present, and future work and using that state to produce a personalized study plan.
 
 The study-planning system is the central component. Recovery/lifestyle and psychological information can influence planning, while the AI layer operates across the system and maintains context about the student's academic state, resources, exams, and history.
 
@@ -136,6 +136,6 @@ The system should not depend on a model's memory of the student's situation. Imp
 
 The first working prototype should answer one question reliably:
 
-> Given a known student state, can Moshaver produce a reasonable plan and adapt that plan after the student fails to follow it?
+> Given a known student state, can Boom produce a reasonable plan and adapt that plan after the student fails to follow it?
 
 Everything outside this loop is secondary until this works.
