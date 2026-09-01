@@ -4,7 +4,7 @@ Boom is an AI-powered study planning system for Iranian Konkoor students.
 
 ## Project goal
 
-Build an adaptive planning engine that maintains a student's academic state, generates a personalized study plan, observes what actually happens, and recalculates the future plan when reality deviates from it.
+Build an adaptive planning engine that maintains a student's academic state, generates a personalized study plan, observes what actually happens, and recalculates the future plan when reality deviates from the plan.
 
 ## Current MVP hypothesis
 
@@ -15,7 +15,7 @@ Build an adaptive planning engine that maintains a student's academic state, gen
 ```text
 backend/    Core application and planning engine
 frontend/   Frontend application
- data/      Structured academic/content data
+data/       Structured academic/content data
 docs/       Product and technical specifications
 tests/      Automated tests
 ```
