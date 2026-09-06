@@ -8,8 +8,8 @@ export const MAJORS = [
   "زبان‌های خارجی",
 ];
 
-export const GRADES = ["دهم", "یازدهم", "دوازدهم (سال کنکور)"];
-export const EXAM_YEARS = ["۱۴۰۴", "۱۴۰۵", "۱۴۰۶", "۱۴۰۷"];
+export const GRADES = ["دهم", "یازدهم", "دوازدهم", "فارغ‌التحصیل"];
+export const EXAM_YEARS = ["۱۴۰۶", "۱۴۰۷", "۱۴۰۸"];
 export const TARGET_RANKS = [
   "زیر ۱۰۰", "زیر ۵۰۰", "زیر ۱٬۰۰۰",
   "زیر ۵٬۰۰۰", "زیر ۱۰٬۰۰۰", "زیر ۲۵٬۰۰۰", "زیر ۵۰٬۰۰۰ و بیشتر",
@@ -18,7 +18,7 @@ export const STUDY_HOURS_OPTIONS = [
   "۱ تا ۲ ساعت", "۲ تا ۳ ساعت", "۳ تا ۴ ساعت", "۴ تا ۶ ساعت", "۶ تا ۸ ساعت", "بیش از ۸ ساعت",
 ];
 export const TEST_EXAM_OPTIONS = [
-  "قلم‌چی", "گاج", "کانون", "پردازش", "سنجش", "نوین", "سه‌گان",
+  "قلم‌چی", "ماز", "گاج", "سنجش", "خیلی سبز",
 ];
 
 export const SUBJECTS_BY_MAJOR: Record<string, string[]> = {

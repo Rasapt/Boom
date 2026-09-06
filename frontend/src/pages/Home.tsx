@@ -94,8 +94,22 @@ function GateModal({ name, onAccept, onDismiss }: { name: string; onAccept: () =
   );
 }
 
-function TaskSheet({ task, onClose, onPostpone }: { task: Task; onClose: () => void; onPostpone: () => void }) {
+function TaskSheet({ task, onClose, onPostpone, onSave }: {
+  task: Task; onClose: () => void; onPostpone: () => void; onSave: (updated: Task) => void;
+}) {
   const color = getSubjectColor(task.subject);
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description);
+  const [duration, setDuration] = useState(task.duration);
+  const [scheduledTime, setScheduledTime] = useState(task.scheduledTime);
+
+  function handleSave() {
+    onSave({ ...task, title, description, duration, scheduledTime });
+    setEditing(false);
+    onClose();
+  }
+
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full max-w-[430px] bg-[#F8F6F2] rounded-t-3xl p-6 pb-10 shadow-2xl"
@@ -109,9 +123,14 @@ function TaskSheet({ task, onClose, onPostpone }: { task: Task; onClose: () => v
             style={{ background: typeBg[task.type], color: typeColor[task.type] }}>
             <TaskTypeIcon type={task.type} />
           </div>
-          <div className="flex-1">
-            <p className="font-bold text-[16px] text-[#1A1108] leading-snug">{task.title}</p>
-            <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex-1 min-w-0">
+            {editing ? (
+              <input value={title} onChange={e => setTitle(e.target.value)}
+                className="w-full font-bold text-[16px] text-[#1A1108] bg-white border-2 border-[#C4714A] rounded-xl px-3 py-1.5 outline-none" />
+            ) : (
+              <p className="font-bold text-[16px] text-[#1A1108] leading-snug">{task.title}</p>
+            )}
+            <div className="flex items-center gap-2 mt-1">
               <span className="text-[11px] font-bold" style={{ color }}>{task.subject}</span>
               <span className="text-[11px] text-[#C4B8A8]">·</span>
               <span className="text-[11px] text-[#A89888] font-medium">{typeLabels[task.type]}</span>
@@ -119,31 +138,59 @@ function TaskSheet({ task, onClose, onPostpone }: { task: Task; onClose: () => v
           </div>
         </div>
 
-        <p className="text-[13px] text-[#5A4030] leading-relaxed mb-5 bg-white rounded-2xl px-4 py-3 border border-[#F0EBE3]">
-          {task.description}
-        </p>
+        {editing ? (
+          <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
+            className="w-full text-[13px] text-[#5A4030] leading-relaxed mb-4 bg-white rounded-2xl px-4 py-3 border-2 border-[#C4714A] outline-none resize-none" />
+        ) : (
+          <p className="text-[13px] text-[#5A4030] leading-relaxed mb-4 bg-white rounded-2xl px-4 py-3 border border-[#F0EBE3]">
+            {task.description}
+          </p>
+        )}
 
         <div className="flex gap-2 mb-5">
-          <div className="flex-1 bg-[#F0EBE3] rounded-xl px-3 py-2.5 text-center">
-            <p className="text-[10px] font-bold text-[#A89888]">مدت</p>
-            <p className="text-[13px] font-bold text-[#3A2A1A] mt-0.5">{task.duration}</p>
+          <div className="flex-1 bg-[#F0EBE3] rounded-xl px-3 py-2.5">
+            <p className="text-[10px] font-bold text-[#A89888] mb-0.5">مدت</p>
+            {editing ? (
+              <input value={duration} onChange={e => setDuration(e.target.value)}
+                className="w-full text-[12px] font-bold text-[#3A2A1A] bg-transparent outline-none border-b border-[#C4714A]" />
+            ) : (
+              <p className="text-[13px] font-bold text-[#3A2A1A]">{task.duration}</p>
+            )}
           </div>
-          <div className="flex-1 bg-[#F0EBE3] rounded-xl px-3 py-2.5 text-center">
-            <p className="text-[10px] font-bold text-[#A89888]">ساعت</p>
-            <p className="text-[13px] font-bold text-[#3A2A1A] mt-0.5" dir="ltr">{task.scheduledTime}</p>
+          <div className="flex-1 bg-[#F0EBE3] rounded-xl px-3 py-2.5">
+            <p className="text-[10px] font-bold text-[#A89888] mb-0.5">ساعت</p>
+            {editing ? (
+              <input value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} dir="ltr"
+                className="w-full text-[12px] font-bold text-[#3A2A1A] bg-transparent outline-none border-b border-[#C4714A] text-left" />
+            ) : (
+              <p className="text-[13px] font-bold text-[#3A2A1A]" dir="ltr">{task.scheduledTime}</p>
+            )}
           </div>
         </div>
 
-        <div className="flex gap-2.5">
-          <button onClick={onPostpone}
-            className="flex-1 py-3.5 rounded-2xl border border-[#E5DDD4] text-[#7A6858] font-bold text-[13px] hover:bg-[#F0EBE3] transition-colors">
-            تعویق به فردا
-          </button>
-          <button onClick={onClose}
-            className="flex-1 py-3.5 rounded-2xl bg-[#C4714A] text-[#F8F6F2] font-bold text-[13px] hover:bg-[#A85C38] transition-colors">
-            بستن
-          </button>
-        </div>
+        {editing ? (
+          <div className="flex gap-2.5">
+            <button onClick={() => setEditing(false)}
+              className="flex-1 py-3.5 rounded-2xl border border-[#E5DDD4] text-[#7A6858] font-bold text-[13px] hover:bg-[#F0EBE3] transition-colors">
+              انصراف
+            </button>
+            <button onClick={handleSave}
+              className="flex-1 py-3.5 rounded-2xl bg-[#C4714A] text-[#F8F6F2] font-bold text-[13px] hover:bg-[#A85C38] transition-colors">
+              ذخیره
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2.5">
+            <button onClick={onPostpone}
+              className="flex-1 py-3.5 rounded-2xl border border-[#E5DDD4] text-[#7A6858] font-bold text-[13px] hover:bg-[#F0EBE3] transition-colors">
+              تعویق به فردا
+            </button>
+            <button onClick={() => setEditing(true)}
+              className="flex-1 py-3.5 rounded-2xl bg-[#C4714A] text-[#F8F6F2] font-bold text-[13px] hover:bg-[#A85C38] transition-colors">
+              ویرایش
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -211,6 +258,7 @@ export default function Home({ userData, tasks, setTasks, nav, onInteract, showG
   const [showTime, setShowTime] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [quizTask, setQuizTask] = useState<Task | null>(null);
+  const [postponingId, setPostponingId] = useState<number | null>(null);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "صبح بخیر" : hour < 17 ? "ظهر بخیر" : "شب بخیر";
@@ -229,6 +277,19 @@ export default function Home({ userData, tasks, setTasks, nav, onInteract, showG
       onInteract();
       setTasks(ts => ts.map(t => t.id === task.id ? { ...t, done: !t.done } : t));
     }
+  }
+
+  function handlePostpone(taskId: number) {
+    setSelectedTask(null);
+    setPostponingId(taskId);
+    setTimeout(() => {
+      setTasks(ts => ts.filter(t => t.id !== taskId));
+      setPostponingId(null);
+    }, 380);
+  }
+
+  function handleSaveTask(updated: Task) {
+    setTasks(ts => ts.map(t => t.id === updated.id ? updated : t));
   }
 
   function handleQuizSubmit(_time: string, _pct: string) {
@@ -316,15 +377,9 @@ export default function Home({ userData, tasks, setTasks, nav, onInteract, showG
                   <p className="text-[72px] font-bold text-[#1A1108] leading-none tabular-nums">{daysLeft}</p>
                   <p className="text-[11px] text-[#A89888] mt-1">{userData.examYear} · {userData.major}</p>
                 </div>
-                <div className="flex flex-col gap-2 text-left">
-                  <div className="bg-[#FFF5F0] rounded-2xl px-4 py-3">
-                    <p className="text-[9px] font-bold text-[#A89888]">تکمیل امروز</p>
-                    <p className="text-[20px] font-bold text-[#C4714A] leading-none">{done}<span className="text-[12px] text-[#C4A080]">/{tasks.length}</span></p>
-                  </div>
-                  <div className="bg-[#F0EBE3] rounded-2xl px-4 py-3">
-                    <p className="text-[9px] font-bold text-[#A89888]">استریک</p>
-                    <p className="text-[20px] font-bold text-[#1A1108] leading-none">{STREAK}<span className="text-[12px] text-[#A89888]"> روز</span></p>
-                  </div>
+                <div className="bg-[#FFF5F0] rounded-2xl px-4 py-3 text-left">
+                  <p className="text-[9px] font-bold text-[#A89888]">تکمیل امروز</p>
+                  <p className="text-[20px] font-bold text-[#C4714A] leading-none">{done}<span className="text-[12px] text-[#C4A080]">/{tasks.length}</span></p>
                 </div>
               </div>
             )}
@@ -332,16 +387,10 @@ export default function Home({ userData, tasks, setTasks, nav, onInteract, showG
             {heroMode === "circular" && (
               <div className="flex items-center justify-between">
                 <CircularProgress done={done} total={tasks.length} />
-                <div className="flex flex-col gap-3 text-left">
-                  <div>
-                    <p className="text-[10px] font-bold text-[#A89888]">روز تا کنکور</p>
-                    <p className="text-[36px] font-bold text-[#C4714A] leading-none">{daysLeft}</p>
-                  </div>
-                  <div className="w-24 h-px bg-[#F0EBE3]" />
-                  <div>
-                    <p className="text-[10px] font-bold text-[#A89888]">استریک</p>
-                    <p className="text-[24px] font-bold text-[#1A1108] leading-none">{STREAK}<span className="text-[11px] text-[#A89888] font-medium"> روز</span></p>
-                  </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-bold text-[#A89888]">روز تا کنکور</p>
+                  <p className="text-[42px] font-bold text-[#C4714A] leading-none">{daysLeft}</p>
+                  <p className="text-[11px] text-[#A89888] mt-1">{userData.examYear}</p>
                 </div>
               </div>
             )}
@@ -363,11 +412,15 @@ export default function Home({ userData, tasks, setTasks, nav, onInteract, showG
           {tasks.map(task => {
             const color = getSubjectColor(task.subject);
             const isQuizOrTest = task.type === "quiz" || task.type === "test";
+            const isPostponing = postponingId === task.id;
             return (
               <div key={task.id}
-                className={`bg-white rounded-2xl border flex items-stretch overflow-hidden transition-all ${
+                className={`bg-white rounded-2xl border flex items-stretch overflow-hidden transition-all duration-[380ms] ${
                   task.done ? "border-[#F0EBE3] opacity-55" : "border-[#F0EBE3] hover:border-[#E5DDD4] shadow-sm"
                 }`}
+                style={isPostponing ? {
+                  opacity: 0, transform: "translateX(100%)", maxHeight: 0, marginBottom: 0, overflow: "hidden",
+                } : { maxHeight: "200px" }}
               >
                 {/* Checkbox — rightmost in RTL */}
                 <div className="flex items-center pr-3.5">
@@ -459,7 +512,8 @@ export default function Home({ userData, tasks, setTasks, nav, onInteract, showG
       {/* Popups */}
       {selectedTask && (
         <TaskSheet task={selectedTask} onClose={() => setSelectedTask(null)}
-          onPostpone={() => setSelectedTask(null)} />
+          onPostpone={() => handlePostpone(selectedTask.id)}
+          onSave={handleSaveTask} />
       )}
       {quizTask && (
         <QuizResultModal task={quizTask} onClose={() => setQuizTask(null)} onSubmit={handleQuizSubmit} />
