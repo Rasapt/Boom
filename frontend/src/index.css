@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=Lalezar&display=swap');
+@import 'tailwindcss';
+
+.font-display { font-family: 'Lalezar', 'Vazirmatn', serif; }
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; direction: rtl; }
+body {
+  font-family: 'Vazirmatn', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #DDD6CC;
+}
+
+::-webkit-scrollbar { width: 0; height: 0; }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 99px;
+  background: #E5DDD4;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #C4714A;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; }
+
+:root {
+  --page-bg: #E8E0D5;
+  --body-bg: #DDD6CC;
+  --surface: #F8F6F2;
+  --card: #FFFFFF;
+  --text: #1A1108;
+  --text-strong: #2C2010;
+  --muted: #7A6858;
+  --muted-2: #A89888;
+  --accent: #C4714A;
+  --accent-soft: #FFF5F0;
+  --surface-2: #F5F0EA;
+  --border: #F0EBE3;
+  --border-strong: #E5DDD4;
+  --placeholder: #C4B8A8;
+  --success: #6B9E7A;
+  --brown-text: #5A4030;
+}
+
+html.dark {
+  --page-bg: #11100F;
+  --body-bg: #0B0B0A;
+  --surface: #171615;
+  --card: #201E1C;
+  --text: #F5F0EA;
+  --text-strong: #FFF9F2;
+  --muted: #B7A99A;
+  --muted-2: #8F8275;
+  --accent: #D9895F;
+  --accent-soft: #35231A;
+  --surface-2: #292622;
+  --border: #342F2A;
+  --border-strong: #4A4139;
+  --placeholder: #776B60;
+  --success: #79B48C;
+  --brown-text: #E0CFC0;
+}
+
+html, body { background: var(--body-bg); color: var(--text); transition: background .2s ease, color .2s ease; }
+button, input, textarea { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
+
+html.dark input[type="range"] { background: var(--border-strong); }
+html.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }

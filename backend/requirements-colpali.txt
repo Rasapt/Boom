@@ -1,0 +1,14 @@
+# Optional dependencies for IMAGE_EMBEDDING_BACKEND=colpali
+#
+# ColPali/ColQwen models are much larger than CLIP and really want a GPU.
+# Install this on top of requirements.txt only if you switch to the
+# ColPali backend:
+#
+#   pip install -r requirements.txt -r requirements-colpali.txt
+#
+# Then in .env:
+#   IMAGE_EMBEDDING_BACKEND=colpali
+
+torch==2.4.0
+transformers==4.44.2
+colpali-engine==0.3.1

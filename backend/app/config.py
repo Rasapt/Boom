@@ -1,0 +1,91 @@
+from functools import lru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    # Application settings
+    APP_NAME: str = "KNTU RAG Assistant"
+    APP_ENV: str = "development"
+    DEMO_USER_ID: int = 1
+
+    # Allowed frontend origins for CORS
+    CORS_ORIGINS: str = "*"
+
+    # File storage paths
+    UPLOAD_DIR: str = "data/uploads"
+    CHROMA_DIR: str = "data/chroma_db"
+
+    # Vector database collection name
+    CHROMA_COLLECTION: str = "kntu_documents"
+
+    # Embedding model configuration
+    EMBEDDING_MODEL_NAME: str = "nomic-embed-text"
+    EMBEDDING_DEVICE: str = "cpu"
+
+    # LLM provider configuration
+    LLM_PROVIDER: str = "openai_compatible"
+    LLM_API_KEY: str = ""
+    LLM_BASE_URL: str = "http://localhost:11434/v1"
+    LLM_MODEL_NAME: str = "aya-expanse:8b-q4_K_S"
+
+    # LLM generation parameters
+    LLM_TEMPERATURE: float = 0.2
+    LLM_MAX_TOKENS: int = 800
+
+    # Text splitting settings for RAG chunks
+    CHUNK_SIZE: int = 800
+    CHUNK_OVERLAP: int = 150
+
+    # Number of documents retrieved from vector database
+    TOP_K: int = 4
+
+    # ================= Image-based PDF RAG (page-as-image) =================
+    # Default processing mode for uploaded PDFs when the client doesn't
+    # explicitly choose one: "text" (old pipeline) or "image" (new pipeline).
+    PDF_PROCESSING_MODE: str = "image"
+
+    # Where rendered page images are stored on disk
+    IMAGES_DIR: str = "data/page_images"
+
+    # Resolution used when rasterizing PDF pages to images.
+    # 200 is a good quality/speed tradeoff for reading dense Persian text.
+    IMAGE_DPI: int = 200
+
+    # Number of page images retrieved per question
+    IMAGE_TOP_K: int = 3
+
+    # Separate Chroma collection for image embeddings (kept apart from the
+    # text-chunk collection so the two pipelines never mix).
+    CHROMA_IMAGE_COLLECTION: str = "kntu_document_images"
+
+    # Which embedding backend to use for page images: "clip" or "colpali".
+    # This is a single switch — swap it any time without touching code.
+    IMAGE_EMBEDDING_BACKEND: str = "clip"
+
+    # --- CLIP backend (default: light, CPU-friendly, multilingual) ---
+    # Two separate towers are used on purpose: sentence-transformers' CLIP
+    # image tower is English-only, and the multilingual text tower was
+    # distilled to share the *same* vector space so Persian queries still
+    # match against it correctly.
+    CLIP_IMAGE_MODEL_NAME: str = "clip-ViT-B-32"
+    CLIP_TEXT_MODEL_NAME: str = "clip-ViT-B-32-multilingual-v1"
+
+    # --- ColPali backend (optional: much stronger, GPU strongly recommended) ---
+    COLPALI_MODEL_NAME: str = "vidore/colqwen2.5-v0.2"
+
+    # Vision-capable model served by Ollama, used to actually read the
+    # retrieved page images and answer the question.
+    VISION_LLM_MODEL_NAME: str = "qwen2.5vl:7b"
+    # =========================================================================
+
+    # ---------- ADD THIS LINE ----------
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8",
+        extra="ignore"   # <-- allows extra env vars like SECRET_KEY
+    )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
