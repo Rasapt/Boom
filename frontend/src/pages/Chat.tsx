@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { NavFn, SignupData } from "../types";
+import { checkBackendHealth, generateStudyPlan, sendBoomChat } from "../api";
 
 interface Msg { role: "user" | "ai"; text: string; }
-const API_BASE = import.meta.env.VITE_API_URL || "";
 const CHIPS = [
   "پیشرفتم امروز چطوره؟",
   "برای ۶ ماه آینده برنامه کنکور بده",
@@ -25,9 +25,16 @@ export default function Chat({ nav, userData }: { nav: NavFn; userData: SignupDa
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [chipsVisible, setChipsVisible] = useState(true);
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, typing]);
+
+  useEffect(() => {
+    checkBackendHealth()
+      .then(() => setBackendOnline(true))
+      .catch(() => setBackendOnline(false));
+  }, []);
 
   async function send(text?: string) {
     const t = (text ?? input).trim();
@@ -36,9 +43,8 @@ export default function Chat({ nav, userData }: { nav: NavFn; userData: SignupDa
     setMsgs(m => [...m, { role: "user", text: t }]);
     setInput(""); setChipsVisible(false); setTyping(true);
     try {
-      const endpoint = isPlanRequest(t) ? "/api/boom/study-plan" : "/api/boom/chat";
-      const body = isPlanRequest(t)
-        ? {
+      const data = isPlanRequest(t)
+        ? await generateStudyPlan({
             months: Number(t.match(/(\d+)\s*ماه/)?.[1] || 6),
             daily_hours: Number((userData?.studyHours || "4").match(/[0-9]+/)?.[0] || 4),
             major: userData?.major || "ریاضی فیزیک",
@@ -48,23 +54,22 @@ export default function Chat({ nav, userData }: { nav: NavFn; userData: SignupDa
             weak_subjects: [],
             strong_subjects: [],
             notes: t,
-          }
-        : { question: t, history, student: userData || {} };
-      const res = await fetch(`${API_BASE}${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      const answer = data.plan || data.answer || "پاسخی دریافت نشد.";
+          })
+        : await sendBoomChat({ question: t, history, student: userData || {} });
+      setBackendOnline(true);
+      const answer = ("plan" in data ? data.plan : data.answer) || "پاسخی دریافت نشد.";
       setMsgs(m => [...m, { role: "ai", text: answer }]);
     } catch (err) {
       console.error(err);
-      setMsgs(m => [...m, { role: "ai", text: "ارتباط با سرور بوم برقرار نشد. مطمئن شو Backend روی پورت ۸۰۰۰ اجرا شده و Ollama در دسترس است." }]);
+      setBackendOnline(false);
+      setMsgs(m => [...m, { role: "ai", text: "ارتباط با سرور بوم برقرار نشد. Backend را روی پورت ۸۰۰۰ اجرا کن و دوباره تلاش کن." }]);
     } finally { setTyping(false); setChipsVisible(true); }
   }
 
   const showChips = chipsVisible && !typing && msgs.length <= 3;
   return <div className="h-screen flex flex-col bg-[var(--surface)]">
     <div className="flex-shrink-0 bg-white border-b border-[var(--border)]">
-      <div className="flex items-center gap-3 px-5 pt-12 pb-4"><button onClick={() => nav("home")} className="w-9 h-9 rounded-xl bg-[var(--border)] flex items-center justify-center text-[var(--muted)]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: "scaleX(-1)" }}><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div className="flex-1 flex items-center gap-3"><div className="flex-1 text-right"><p className="text-[15px] font-bold text-[var(--text)]">بوم <span className="text-[var(--accent)]">AI</span></p><div className="flex items-center gap-1.5 justify-end"><span className="text-[11px] text-[var(--success)] font-medium">RAG متصل</span><div className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" /></div></div><BoomAvatar size={36}/></div></div>
+      <div className="flex items-center gap-3 px-5 pt-12 pb-4"><button onClick={() => nav("home")} className="w-9 h-9 rounded-xl bg-[var(--border)] flex items-center justify-center text-[var(--muted)]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: "scaleX(-1)" }}><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div className="flex-1 flex items-center gap-3"><div className="flex-1 text-right"><p className="text-[15px] font-bold text-[var(--text)]">بوم <span className="text-[var(--accent)]">AI</span></p><div className="flex items-center gap-1.5 justify-end"><span className={`text-[11px] font-medium ${backendOnline === false ? "text-[var(--muted)]" : "text-[var(--success)]"}`}>{backendOnline === false ? "سرور قطع" : "Backend متصل"}</span><div className={`w-1.5 h-1.5 rounded-full ${backendOnline === false ? "bg-[var(--muted)]" : "bg-[var(--success)]"}`} /></div></div><BoomAvatar size={36}/></div></div>
       <div className="px-5 pb-3 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>{[{label:"رشته",value:userData?.major?.split(" ")[0]??"ریاضی"},{label:"هدف",value:userData?.targetRank??"زیر ۵٬۰۰۰"},{label:"زمان",value:userData?.studyHours??"۳ تا ۴ ساعت"}].map(x=><div key={x.label} className="flex items-center gap-1.5 bg-[var(--surface-2)] rounded-xl px-3 py-1.5 flex-shrink-0"><span className="text-[10px] font-bold text-[var(--muted-2)]">{x.label}:</span><span className="text-[11px] font-bold text-[var(--brown-text)]">{x.value}</span></div>)}</div>
     </div>
     <div className="flex-1 overflow-y-auto px-4 py-4"><div className="flex flex-col gap-3">{msgs.map((m,i)=><div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-start" : "justify-end"}`}>{m.role === "ai" && <BoomAvatar size={26}/>}<div className={`max-w-[85%] px-4 py-3 rounded-2xl text-[13px] leading-[1.65] font-medium whitespace-pre-wrap ${m.role === "user" ? "bg-[var(--accent)] text-[var(--surface)] rounded-tl-sm" : "bg-white text-[var(--text)] border border-[var(--border)] rounded-tr-sm shadow-sm"}`}>{m.text}</div></div>)}
