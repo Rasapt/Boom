@@ -30,7 +30,6 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      proxy: { '/api': 'http://localhost:8000' },
       host: '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
       strictPort: true,
