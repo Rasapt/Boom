@@ -85,12 +85,18 @@ class OllamaLLMClient(BaseLLMClient):
         max_tokens: int,
         timeout: float = 60.0,
     ):
-        self.base_url = base_url.rstrip("/")
+        clean_url = (base_url or "").strip().rstrip("/")
+        if "localhost" in clean_url:
+            clean_url = clean_url.replace("localhost", "127.0.0.1")
+        if clean_url.endswith("/v1"):
+            clean_url = clean_url[:-3]
+        self.base_url = clean_url
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
-        self.client = httpx.Client(timeout=timeout, follow_redirects=True)
+        # Crucial: trust_env=False prevents httpx from routing 127.0.0.1 through system proxies (e.g. v2ray/VPN)
+        self.client = httpx.Client(timeout=timeout, follow_redirects=True, trust_env=False)
 
     @staticmethod
     def _encode_images(image_paths: List[str]) -> List[str]:
@@ -150,9 +156,10 @@ class OllamaLLMClient(BaseLLMClient):
         """Send a non-streaming request to Ollama."""
         url = f"{self.base_url}/api/chat"
         payload = self._prepare_payload(messages, stream=False, max_tokens=max_tokens, images=images)
+        req_timeout = timeout if timeout is not None else self.timeout
         
         try:
-            resp = self.client.post(url, json=payload)
+            resp = self.client.post(url, json=payload, timeout=req_timeout)
             resp.raise_for_status()
             data = resp.json()
             # Ollama returns a single message in the 'message' field when stream=False
@@ -162,7 +169,7 @@ class OllamaLLMClient(BaseLLMClient):
                 logger.warning("Unexpected response format from Ollama: %s", data)
                 return ""
         except httpx.TimeoutException:
-            logger.warning("Ollama request timed out.")
+            logger.warning("Ollama request timed out after %ss.", req_timeout)
             return ""
         except Exception as e:
             logger.warning(f"Ollama request failed: {e}")

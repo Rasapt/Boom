@@ -55,6 +55,8 @@ def boom_chat(request: BoomChatRequest):
         top_k=request.top_k,
         student=request.student,
     )
+    if not result.get("answer"):
+        result["answer"] = "پاسخی از مدل زبانی دریافت نشد. لطفاً مطمئن شوید سرویس Ollama در حال اجراست."
     return result
 
 

@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     # Number of page images retrieved per question
     IMAGE_TOP_K: int = 3
 
+    # Minimum cosine similarity required before a page image can trigger
+    # the vision pipeline.  Without this cutoff Chroma returns nearest
+    # neighbours even for unrelated questions whenever images are indexed.
+    # Tune this upward for stricter matching or downward for higher recall.
+    IMAGE_RELEVANCE_THRESHOLD: float = 0.35
+
     # Separate Chroma collection for image embeddings (kept apart from the
     # text-chunk collection so the two pipelines never mix).
     CHROMA_IMAGE_COLLECTION: str = "kntu_document_images"

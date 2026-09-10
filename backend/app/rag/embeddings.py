@@ -21,14 +21,20 @@ logger = get_logger(__name__)
 class EmbeddingModel:
     """Wrapper around Ollama's embedding models."""
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, base_url: str = None):
         logger.info(f"Loading Ollama embedding model: {model_name}")
+        settings = get_settings()
+        raw_url = (base_url or settings.LLM_BASE_URL or "http://127.0.0.1:11434").strip().rstrip("/")
+        if "localhost" in raw_url:
+            raw_url = raw_url.replace("localhost", "127.0.0.1")
+        if raw_url.endswith("/v1"):
+            raw_url = raw_url[:-3]
         
         # Initialize the Ollama embeddings client
         # base_url points to Ollama's default API (no /v1 needed for embeddings)
         self.model = OllamaEmbeddings(
             model=model_name,
-            base_url="http://localhost:11434"
+            base_url=raw_url
         )
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:

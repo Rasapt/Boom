@@ -57,8 +57,15 @@ class ClipImageEmbedding(BaseImageEmbeddingModel):
             f"Loading CLIP image tower '{image_model_name}' and "
             f"multilingual text tower '{text_model_name}'."
         )
-        self.image_model = SentenceTransformer(image_model_name)
-        self.text_model = SentenceTransformer(text_model_name)
+        try:
+            self.image_model = SentenceTransformer(image_model_name, local_files_only=True)
+        except Exception:
+            self.image_model = SentenceTransformer(image_model_name)
+
+        try:
+            self.text_model = SentenceTransformer(text_model_name, local_files_only=True)
+        except Exception:
+            self.text_model = SentenceTransformer(text_model_name)
 
     def embed_images(self, image_paths: List[Path]) -> List[List[float]]:
         from PIL import Image

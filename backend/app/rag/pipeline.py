@@ -184,19 +184,51 @@ def rewrite_query(question: str) -> str:
 
 
 def _retrieve_image_hits(search_query: str, user_id: int, k: int) -> List[dict]:
-    """Embed the query with the active image backend and search the
-    page-image collection. Returns [] safely if nothing is indexed yet."""
+    """Retrieve only *relevant* page images for a query.
+
+    Chroma always returns the nearest neighbours when a collection contains
+    anything, even when every neighbour is a poor match.  Passing those
+    neighbours to the vision model makes unrelated PDFs/images hijack normal
+    chat questions.  We therefore retrieve a few extra candidates and apply
+    an explicit cosine-similarity cutoff before enabling the vision path.
+    """
+    from app.config import get_settings
     from app.rag.image_embeddings import get_image_embedding_model
 
     try:
-        image_embedder = get_image_embedding_model()
+        settings = get_settings()
         image_vector_store = get_image_vector_store()
+        if image_vector_store.collection.count() == 0:
+            return []
+
+        image_embedder = get_image_embedding_model()
         query_embedding = image_embedder.embed_query(search_query)
-        return image_vector_store.similarity_search(
+
+        # Retrieve extra candidates, then filter by actual similarity.
+        # A larger candidate pool improves recall without allowing unrelated
+        # pages through to the vision model.
+        candidate_k = max(k * 3, 10)
+        candidates = image_vector_store.similarity_search(
             query_embedding=query_embedding,
-            top_k=k,
+            top_k=candidate_k,
             user_id=user_id,
         )
+
+        threshold = settings.IMAGE_RELEVANCE_THRESHOLD
+        relevant = [
+            hit for hit in candidates
+            if float(hit.get("score", 0.0)) >= threshold
+        ]
+
+        # Keep the requested number of best relevant pages only.
+        relevant = relevant[:k]
+
+        logger.info(
+            "Image retrieval: %d candidate(s), %d relevant page(s), "
+            "threshold=%.3f for user %s.",
+            len(candidates), len(relevant), threshold, user_id,
+        )
+        return relevant
     except Exception as e:
         logger.warning(f"Image retrieval failed, continuing with text-only: {e}")
         return []
