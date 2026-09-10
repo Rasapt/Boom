@@ -10,7 +10,7 @@ export interface SignupData {
   targetRank: string;
   studyHours: string;
   testExams: string[];
-  phone?: string;
+  phone: string;
 }
 
 export interface Task {
